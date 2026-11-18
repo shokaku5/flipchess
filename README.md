@@ -6,7 +6,7 @@
 核心代码，使用方法看注释
 运行之前要先在终端（cmd）中输入
 ```
-cd "d:\single chip\flipchess\output"
+cd "d:\single chip\flipchess\output" # 这一行针对你的实际地址，写到项目结构的output文件夹下就可以了
 chcp 65001
 ```
 预期看到的输出
