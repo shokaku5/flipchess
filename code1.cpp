@@ -7,6 +7,14 @@ char map[8][8]; //下棋的棋子图
 bool map2[8][8]; //判断此处是否可以落子
 int black, white; //统计黑白棋子的数量
 int X1,Y1; //记录上一次落子的位置
+int moveCount = 0; //记录落子次数
+
+struct moveEcho
+{
+    int x, y;
+    char color;
+};
+moveEcho moveHistory[70]; //记录每一步的落子位置和颜色
 
 void clear(void);                    //还原棋盘
 void draw(int x, int y, char color); //画出本轮落子后的棋盘
@@ -14,6 +22,7 @@ int judge(int x, int y, char color); //判断是否可以使用
 bool gameIsValid(char color);             //判断此处是否可以落子
 void flip(int x, int y, char color);  //翻转棋子
 void countChess(void);                  //统计黑白棋子的数量
+char undoMove(int x, int y);                      //悔棋
 
 int main()
 {
@@ -28,13 +37,10 @@ int main()
         if (op == 'Q')
         {
             cout << "感谢游玩黑白棋游戏！期待您下次光临！" << endl;
-            cout << "This is a testing message." << endl;
             break;
         }
         while(gameIsValid(color))
         {
-            cout << "当前轮到" << color << "方落子，请输入落子位置（行 列）：" << endl;
-            cin >> X1 >> Y1;
             cout << "您是否要进行特殊操作？ R. 悔棋 T. 打开作弊模式 Y. 立刻结算 U. 查看回放" << endl; //提示用户是否要进行特殊操作，U暂时不写
             cin >> special_op;
             if(special_op == 'Y')
@@ -44,8 +50,17 @@ int main()
             switch(special_op)
             {
                 case 'R':
-                    cout << "悔棋功能暂未开放，请重新输入落子位置！" << endl;
-                    continue;
+                    if (undoMove(moveHistory[moveCount-1].x, moveHistory[moveCount-1].y) == ' ')
+                    {
+                        cout << "悔棋失败，当前局面非法！将立即进行结算。" << endl;
+                        break;
+                    }
+                    else
+                    {
+                        color = undoMove(X1, Y1);
+                        draw(-1, -1, '0');
+                        continue;
+                    }
                 case 'T':
                     cout << "作弊模式暂未开放，请重新输入落子位置！" << endl;
                     continue;
@@ -53,8 +68,10 @@ int main()
                     cout << "查看回放功能暂未开放，请重新输入落子位置！" << endl;
                     continue;
                 default:
-                    break;
+                    cout << "未检测到特殊操作指令，将进行正常操作。" << endl;
             }
+            cout << "当前轮到" << color << "方落子，请输入落子位置（行 列）：" << endl;
+            cin >> X1 >> Y1;
             if(X1 < 0 || X1 >= 8 || Y1 < 0 || Y1 >= 8)                                 //判断数组坐标是否越界
             {
                 cout << "坐标超出棋盘范围，请重新输入！" << endl;
@@ -70,6 +87,8 @@ int main()
             {
                 cout << "此处不能落子，请重新输入！" << endl;
             }
+            moveHistory[moveCount].x = X1, moveHistory[moveCount].y = Y1, moveHistory[moveCount].color = color;
+            moveCount++;
         }
         countChess();
         cout << "游戏结束！" << endl;
@@ -224,8 +243,29 @@ void countChess(void)
             else if(map[i][j] == 'W') white++;
         }
     }
+    cout << "黑棋棋子数：" << black << endl;
+    cout << "白棋棋子数：" << white << endl;
     if (black > white) cout << "可恶，就差一点点……" << endl;
     else if (white > black) cout << "菜就多练" << endl;
     else cout << "棋逢对手，将遇良才。痛快！" << endl;
+}
+
+char undoMove(int x, int y)
+{
+    char colorUndo = map[x][y];
+    map[x][y] = '.';
+    if(gameIsValid(colorUndo))
+    {
+        colorUndo = moveHistory[moveCount].color;
+        moveCount--;
+        cout << "悔棋成功！" << endl;
+        return colorUndo;
+    }
+    else
+    {
+        cout << "当前局面非法！该局比赛结束。" << endl;
+        return ' ';
+    }
+    return ' ';
 }
 
